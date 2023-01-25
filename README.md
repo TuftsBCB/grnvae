@@ -1,6 +1,8 @@
 # GRN-VAE
 
-This repository include code and documentation for our implementation GRN-VAE, a stablized SEM style Variational autoencoder for gene regulatory network inference. 
+This repository include code and documentation for GRN-VAE, a stablized SEM style Variational autoencoder for gene regulatory network inference. 
+
+The pre-print of this paper could be found [here](https://bcb.cs.tufts.edu/GRN-VAE/GRNVAE_ISMB_submission.pdf)
 
 ## Getting Started with GRN-VAE
 
