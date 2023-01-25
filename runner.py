@@ -5,6 +5,7 @@ from torch.utils.data.dataset import TensorDataset
 from models import GRNVAE
 from evaluate import top_k_filter, get_epr
 from tqdm import tqdm
+from logger import LightLogger
 
 configs = {    
     'train_split': 1.0,
@@ -46,9 +47,15 @@ def runGRNVAE(exp_array, configs,
         `train_on_non_zero`, `dropout_augmentation`, `cuda`,
         `alpha`, `beta`, `delays_on_sparse`, `n_epochs`, 
         `eval_on_n_steps`, `lr_nn`, `lr_adj`, `K1`, and `K2`. 
-    benchmark_data: str
-        Benchmark datasets. Choose among `hESC`, `hHep`, `mDC`, 
-        `mESC`, `mHSC`, `mHSC-GM`, and `mHSC-L`.
+    ground_truth: tuple or None
+        (Optional, only for BEELINE evaluation) You don't need 
+        to define this parameter when you execute GRNVAE on real 
+        datasets when the ground truth network is unknown. For 
+        evaluations on BEELINE, 
+        BEELINE ground truth object exported by 
+        data.load_beeline_ground_truth. It's a tuple with the 
+        first element being truth_edges and second element being
+        evaluate_mask.
     benchmark_setting: str
         Benchmark settings. Choose among `500_STRING`, 
         `1000_STRING`, `500_Non-ChIP`, `1000_Non-ChIP`, 
