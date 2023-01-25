@@ -1,0 +1,10 @@
+data/
+data_viz/
+hammond_models/
+saved_models/
+archive/
+results/
+result_logs/
+beeline_generated.zip
+__pycache__/
+.ipynb_checkpoints
