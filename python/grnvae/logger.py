@@ -84,7 +84,7 @@ class LightLogger:
                 to_delete.append(k)
         for k in to_delete:
             del self.mem[k]
-
+            
 def load_logger(path):
     with open(path, 'r') as f:
         logger_import = json.load(f)
@@ -96,4 +96,4 @@ def load_logger(path):
     logger.logging_vars = set(logger_import['logging_vars'])
     print("Loading logger complete!")
     return logger
-
+    

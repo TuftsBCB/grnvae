@@ -8,3 +8,7 @@ result_logs/
 beeline_generated.zip
 __pycache__/
 .ipynb_checkpoints
+exp_1.ipynb
+exp_2.ipynb
+exp_3.ipynb
+exp_4.ipynb

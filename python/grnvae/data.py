@@ -32,11 +32,7 @@ def load_beeline_ground_truth(data_dir, gene_names):
 
     idx_source, idx_target = np.where(A_truth)
     truth_edges = set(zip(idx_source, idx_target))
-    
-    eval_flat_mask = (evaluate_mask.flatten() != 0)
-    y_true = A_truth.flatten()[eval_flat_mask]
-    
-    return eval_flat_mask, y_true
+    return truth_edges, evaluate_mask
 
 def load_beeline(data_dir, benchmark_data='hESC', 
                  benchmark_setting='500_STRING'):
@@ -86,7 +82,7 @@ def download_beeline(save_dir, remove_zip=True):
             zip_ref.extract(member=file, path=save_dir)
     if remove_zip:
         os.remove(zip_path)
-
+        
 # Modified from https://gist.github.com/yanqd0/c13ed29e29432e3cf3e7c38467f42f51
 def download_file(url, file_path, chunk_size=1024):
     req = urllib.request.urlopen(url)

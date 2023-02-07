@@ -25,9 +25,10 @@ class MLP(nn.Module):
 
 class GRNVAE(nn.Module):
     def __init__(
-        self, n_gene, hidden_dim=128, z_dim=1, activation=nn.Tanh,
-        train_on_non_zero=False, dropout_augmentation=0.05,
-        pretrained_A=None, 
+        self, n_gene, 
+        hidden_dim=128, z_dim=1, activation=nn.Tanh,
+        A_random_seed=None, pretrained_A=None, 
+        train_on_non_zero=False, dropout_augmentation=0.05
     ):
         super(GRNVAE, self).__init__()
         self.n_gene = n_gene
@@ -36,7 +37,13 @@ class GRNVAE(nn.Module):
         self.train_on_non_zero = train_on_non_zero
         
         if pretrained_A is None:
-            adj_A = torch.ones(n_gene, n_gene) / (n_gene - 1) + 0.0001
+            adj_A = torch.ones(n_gene, n_gene) / (n_gene - 1)
+            if A_random_seed is not None:
+                rs = np.random.RandomState(seed=A_random_seed)
+                init_A_noise = rs.rand(n_gene, n_gene) * 0.0002
+                adj_A += torch.FloatTensor(init_A_noise, device=adj_A.device)
+            else:
+                adj_A += torch.rand_like(adj_A) * 0.0002
         else:
             adj_A = pretrained_A
         self.adj_A = nn.Parameter(adj_A, requires_grad=True)
@@ -117,13 +124,10 @@ class GRNVAE(nn.Module):
 
         loss_sparse = torch.mean(torch.abs(self.adj_A))
         
-        loss_negative = torch.mean(torch.relu(-self.adj_A))
-        
         out = {
             'loss_rec': loss_rec, 'loss_kl': loss_kl, 
             'loss_sparse': loss_sparse,
-            'loss_negative': loss_negative,
             'z_posterior': z_posterior, 'z': z
         }
         return out
-
+    
