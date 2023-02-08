@@ -65,6 +65,8 @@ def load_beeline(data_dir, benchmark_data='hESC',
         genes on columns. Second element is the corresponding 
         BEELINE ground truth data 
     '''
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
     if not os.path.exists(f'{data_dir}/BEELINE/'):
         download_beeline(data_dir)
     data_dir = f'{data_dir}/BEELINE/{benchmark_setting}_{benchmark_data}'

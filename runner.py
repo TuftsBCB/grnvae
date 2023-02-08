@@ -93,8 +93,8 @@ def runGRNVAE(exp_array, configs,
     )
     
     all_but_adj = [p for i, p in enumerate(vae.parameters()) if i != 0]
-    opt_nn = torch.optim.Adam(all_but_adj, lr=configs['lr_nn'])
-    opt_adj = torch.optim.Adam([vae.adj_A], lr=configs['lr_adj'])
+    opt_nn = torch.optim.Adam(all_but_adj, lr=configs['lr_nn'], betas=[0.9, 0.9])
+    opt_adj = torch.optim.Adam([vae.adj_A], lr=configs['lr_adj'], betas=[0.9, 0.9])
 
     # Move things to cuda if necessary -----------------------------------------
     if configs['cuda']:
