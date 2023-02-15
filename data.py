@@ -36,7 +36,7 @@ def load_beeline_ground_truth(data_dir, gene_names):
     eval_flat_mask = (evaluate_mask.flatten() != 0)
     y_true = A_truth.flatten()[eval_flat_mask]
     
-    return eval_flat_mask, y_true
+    return eval_flat_mask, y_true, truth_edges
 
 def load_beeline(data_dir, benchmark_data='hESC', 
                  benchmark_setting='500_STRING'):

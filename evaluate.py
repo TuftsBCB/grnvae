@@ -27,7 +27,7 @@ def get_metrics(A, ground_truth):
     tuple
         A tuple with AUPR, AUPR ratio, EP (in counts), and EPR
     '''
-    eval_flat_mask, y_true = ground_truth
+    eval_flat_mask, y_true, _ = ground_truth
     y_pred = np.abs(A.flatten()[eval_flat_mask])
     
     AUPR = average_precision_score(y_true, y_pred)
