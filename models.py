@@ -54,7 +54,7 @@ class GRNVAE(nn.Module):
         self.inference_zposterior = MLP(1, hidden_dim, 2*z_dim, activation)
         self.generative_pxz = MLP(z_dim, hidden_dim, 1, activation)
         self.dropout_on_visible = nn.Dropout(p = dropout_augmentation)
-        self.dropout_on_adj = nn.Dropout(p = dropout_augmentation)
+        # self.dropout_on_adj = nn.Dropout(p = dropout_augmentation)
         
         self.apply(self._init_weights)
         
@@ -81,7 +81,8 @@ class GRNVAE(nn.Module):
         eye_tensor = torch.eye(self.n_gene, device = self.adj_A.device)
         # clean up A along diagnal line
         mask = torch.ones_like(self.adj_A) - eye_tensor
-        clean_A = self.dropout_on_adj(self.adj_A) * mask
+        clean_A = self.adj_A * mask
+        # clean_A = self.dropout_on_adj(self.adj_A) * mask
         return eye_tensor - clean_A
     
     def reparameterization(self, z_posterior):
@@ -94,17 +95,9 @@ class GRNVAE(nn.Module):
             non_zero_mask = (x != 0)
         else:
             non_zero_mask = torch.ones_like(x)
-        
+                
         if use_dropout_augmentation:
             x = self.dropout_on_visible(x)
-            
-#         cell_min = x.min(1, keepdims=True)[0]
-#         cell_max = x.max(1, keepdims=True)[0]
-#         x_cell_norm = (x-cell_min)/(cell_max - cell_min)
-        
-#         x_norm = (x_cell_norm - x_cell_norm.mean(0)) / x_cell_norm.std(0)
-            
-        # x = (x_cell_norm - global_mean) / global_std
             
         x = (x - global_mean) / global_std
 
@@ -126,12 +119,12 @@ class GRNVAE(nn.Module):
         # Losses ---------------------------------------------------------------
         if self.train_on_non_zero:
             loss_rec = torch.sum((x - x_rec).pow(2) * non_zero_mask)
-            # loss_rec /= torch.sum(non_zero_mask)
+            loss_rec /= torch.sum(non_zero_mask)
         else:
-            loss_rec = torch.sum((x - x_rec).pow(2))
+            loss_rec = torch.mean((x - x_rec).pow(2))
         
         # if direct_loss:
-        loss_kl = -0.5 * torch.sum(
+        loss_kl = -0.5 * torch.mean(
             1 + torch.log(z_sigma.pow(2)) - z_mu.pow(2) - z_sigma.pow(2))
         # else:
         #     z_posterior_normal = Normal(z_posterior[:, :, :self.z_dim], 
@@ -141,12 +134,9 @@ class GRNVAE(nn.Module):
         #         torch.ones_like(z_posterior[:, :, :self.z_dim]))
         #     loss_kl = torch.abs(z_posterior_normal.log_prob(z).mean() - \
         #                         z_prior_normal.log_prob(z).mean())
-
-        loss_sparse = torch.mean(torch.abs(self.get_adj_()).sum(0))
                 
         out = {
             'loss_rec': loss_rec, 'loss_kl': loss_kl, 
-            'loss_sparse': loss_sparse,
             'z_posterior': z_posterior, 'z': z
         }
         return out

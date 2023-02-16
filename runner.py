@@ -57,6 +57,10 @@ def runGRNVAE(exp_array, configs,
     logger.set_configs(configs)
     note_id = logger.start()
 
+    cell_min = exp_array.min(1, keepdims=True)
+    cell_max = exp_array.max(1, keepdims=True)
+    exp_array = (exp_array - cell_min) / (cell_max - cell_min)
+    
     # Global Mean/Std ----------------------------------------------------------
     global_mean = torch.FloatTensor(exp_array.mean(0))
     global_std = torch.FloatTensor(exp_array.std(0))
@@ -145,8 +149,10 @@ def runGRNVAE(exp_array, configs,
                 out = vae(x, global_mean, global_std, 
                           use_dropout_augmentation=True)
             loss = out['loss_rec'] + configs['beta'] * out['loss_kl'] 
+            adj_m = vae.get_adj_()
+            loss_sparse = torch.norm(adj_m, 1) / n_gene
             if epoch >= configs['delayed_steps_on_sparse']:
-                loss += configs['alpha'] * x.shape[0] * out['loss_sparse']
+                loss += configs['alpha'] * loss_sparse
             if configs['h_scale'] != 0:
                 loss += configs['h_scale'] * vae.get_adj_h()
             loss.backward()
@@ -157,11 +163,11 @@ def runGRNVAE(exp_array, configs,
             if evaluation_turn:
                 eval_log['train_loss_rec'] += out['loss_rec'].detach().cpu().item()
                 eval_log['train_loss_kl'] += out['loss_kl'].detach().cpu().item()
-                eval_log['train_loss_sparse'] += out['loss_sparse'].detach().cpu().item()
+                eval_log['train_loss_sparse'] += loss_sparse.detach().cpu().item()
         
         # go through val samples
         if evaluation_turn:
-            adj_matrix = vae.get_adj()
+            adj_matrix = adj_m.cpu().detach().numpy()
             adjs.append(adj_matrix)
             eval_log['negative_adj'] = int(np.sum(adj_matrix < -1e-5))
             if ground_truth is not None:
