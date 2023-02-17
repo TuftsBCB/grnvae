@@ -45,7 +45,7 @@ configs = {
     'cuda': True,
     
     # Loss
-    'alpha': 0.2,
+    'alpha': 0.1,
     'beta': 1,
     'h_scale': 0,
     'delayed_steps_on_sparse': 30,
@@ -114,19 +114,7 @@ get_metrics(A, ground_truth)
 
 
 
-    {'AUPR': 0.05614344155288137,
-     'AUPRR': 2.3342061154713103,
-     'EP': 497,
-     'EPR': 4.853923306354596}
-
-
-
-
-```python
-logger.to_df().EPR.max()
-```
-
-
-
-
-    5.068785102611741
+    {'AUPR': 0.0552235472765148,
+     'AUPRR': 2.295960814041767,
+     'EP': 476,
+     'EPR': 4.648827955381867}
