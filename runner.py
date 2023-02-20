@@ -135,7 +135,7 @@ def runGRNVAE(exp_array, configs,
         eval_log = {
             'train_loss_rec': 0, 'train_loss_kl': 0, 'train_loss_sparse': 0
         }
-        for batch in train_loader:
+        for i, batch in enumerate(train_loader):
             x = batch[0]
             if configs['cuda']:
                 x = x.cuda()
@@ -150,7 +150,7 @@ def runGRNVAE(exp_array, configs,
                           use_dropout_augmentation=True)
             loss = out['loss_rec'] + configs['beta'] * out['loss_kl'] 
             adj_m = vae.get_adj_()
-            loss_sparse = torch.norm(adj_m, 1) / n_gene
+            loss_sparse = torch.norm(adj_m, 1) / n_gene / n_gene
             if epoch >= configs['delayed_steps_on_sparse']:
                 loss += configs['alpha'] * loss_sparse
             if configs['h_scale'] != 0:
@@ -160,10 +160,12 @@ def runGRNVAE(exp_array, configs,
                 opt_adj.step()
             else:
                 opt_nn.step()
-            if evaluation_turn:
-                eval_log['train_loss_rec'] += out['loss_rec'].detach().cpu().item()
-                eval_log['train_loss_kl'] += out['loss_kl'].detach().cpu().item()
-                eval_log['train_loss_sparse'] += loss_sparse.detach().cpu().item()
+            eval_log['train_loss_rec'] += out['loss_rec'].detach().cpu().item()
+            eval_log['train_loss_kl'] += out['loss_kl'].detach().cpu().item()
+            eval_log['train_loss_sparse'] += loss_sparse.detach().cpu().item()
+        
+        for log_item in eval_log.keys():
+            eval_log[log_item] /= (i+1)
         
         # go through val samples
         if evaluation_turn:
@@ -202,3 +204,10 @@ def runGRNVAE(exp_array, configs,
         scheduler_adj.step()
     logger.finish()
     return vae.cpu(), adjs
+
+# def guess_best_alpha(sparse_loss):
+#     if sparse_loss < 1.1:
+#         return 0.1
+#     if sparse_loss > 1.8:
+#         return 0.24
+#     return np.round(0.1 + (sparse_loss - 1.1) * 0.2, 2)

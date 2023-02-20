@@ -45,7 +45,7 @@ configs = {
     'cuda': True,
     
     # Loss
-    'alpha': 0.1,
+    'alpha': 100,
     'beta': 1,
     'h_scale': 0,
     'delayed_steps_on_sparse': 30,
