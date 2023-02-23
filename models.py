@@ -67,7 +67,7 @@ class GRNVAE(nn.Module):
     def get_adj_(self):
         eye_tensor = torch.eye(self.n_gene, device = self.adj_A.device)
         mask = torch.ones_like(self.adj_A) - eye_tensor
-        return (torch.relu(self.adj_A) * mask)
+        return (self.adj_A * mask)
     
     def get_adj(self):
         return self.get_adj_().cpu().detach().numpy()
@@ -81,7 +81,7 @@ class GRNVAE(nn.Module):
         eye_tensor = torch.eye(self.n_gene, device = self.adj_A.device)
         # clean up A along diagnal line
         mask = torch.ones_like(self.adj_A) - eye_tensor
-        clean_A = torch.relu(self.adj_A) * mask
+        clean_A = self.adj_A * mask
         # clean_A = self.dropout_on_adj(self.adj_A) * mask
         return eye_tensor - clean_A
     
