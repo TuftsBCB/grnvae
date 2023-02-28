@@ -13,7 +13,8 @@ This document provides an end-to-end demonstration on how to infer GRN with our 
 import numpy as np
 from data import load_beeline
 from logger import LightLogger
-from runner import runGRNVAE
+from runner import runGRNVAE, runGRNVAE_ensemble, DEFAULT_GRNVAE_CONFIGS
+from runner import runDeepSEM, runDeepSEM_ensemble, DEFAULT_DEEPSEM_CONFIGS
 from evaluate import extract_edges, get_metrics
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -21,47 +22,13 @@ import matplotlib.pyplot as plt
 
 ## Model Configurations
 
-First you need to define some configs for running the model. We suggest you start with the following set of parameters. The three key concepts proposed in the GRN-VAE paper are controlled by the following parameters. 
+First you need to define some configs for running the model. Here we provide a default set of parameters in `runner` called `DEFAULT_GRNVAE_CONFIGS`. It comes in the forms of a standard python dictionary so it's very easy to modify as needed. 
+
+The three key concepts proposed in the GRN-VAE paper are controlled by the following parameters. 
 
 - `delayed_steps_on_sparse`: Number of delayed steps on introducing the sparse loss. 
 - `dropout_augmentation`: The proportion of data that will be randomly masked as dropout in each traing step.
 - `train_on_non_zero`: Whether to train the model on non-zero expression data
-
-Note that here we also use lower learning rates for a longer period of time when model is trained on non-zero data. 
-
-
-```python
-configs = {
-    # Train/Test split
-    'train_split': 1.0,
-    'train_split_seed': None, 
-    
-    # Neural Net Definition
-    'hidden_dim': 128,
-    'z_dim': 1,
-    'A_dim': 0,
-    'train_on_non_zero': True,
-    'dropout_augmentation': 0.1,
-    'cuda': True,
-    
-    # Loss
-    'alpha': 100,
-    'beta': 1,
-    'h_scale': 0,
-    'delayed_steps_on_sparse': 30,
-    
-    # Neural Net Training
-    'batch_size': 256,
-    'n_epochs': 1000,
-    'schedule': [30, 100],
-    'eval_on_n_steps': 10,
-    'early_stopping': 0,
-    'lr_nn': 1e-4,
-    'lr_adj': 2e-5,
-    'K1': 1,
-    'K2': 1
-}
-```
 
 ## Data loading
 [BEELINE benchmarks](https://github.com/Murali-group/Beeline) could be loaded by the `load_beeline` function, where you specify where to look for data and which benchmark to load. If it's the first time, this function will download the files automatically. 
@@ -93,14 +60,10 @@ Model training is simple with the `runGRNVAE` function. As said above, if ground
 logger = LightLogger()
 # runGRNVAE initializes and trains a GRNVAE model with the configs specified. 
 vae, adjs = runGRNVAE(
-    data.X, configs, ground_truth=ground_truth, logger=logger)
+    data.X, DEFAULT_GRNVAE_CONFIGS, ground_truth=ground_truth, logger=logger)
 ```
 
-    /h/hao/miniconda3/lib/python3.10/site-packages/torch/cuda/__init__.py:497: UserWarning: Can't initialize NVML
-      warnings.warn("Can't initialize NVML")
-      0%|          | 0/1000 [00:00<?, ?it/s]/h/hao/miniconda3/lib/python3.10/site-packages/torch/optim/lr_scheduler.py:138: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
-      warnings.warn("Detected call of `lr_scheduler.step()` before `optimizer.step()`. "
-    100%|██████████| 1000/1000 [01:04<00:00, 15.47it/s]
+    100%|██████████| 120/120 [00:33<00:00,  3.63it/s]
 
 
 The learned adjacency matrix could be obtained by the `get_adj()` method. For BEELINE benchmarks, you can get the performance metrics of this run using the `get_metrics` function. 
@@ -114,7 +77,9 @@ get_metrics(A, ground_truth)
 
 
 
-    {'AUPR': 0.0552235472765148,
-     'AUPRR': 2.295960814041767,
-     'EP': 476,
-     'EPR': 4.648827955381867}
+    {'AUPR': 0.0559541042642767,
+     'AUPRR': 2.3263342742602315,
+     'EP': 489,
+     'EPR': 4.77579174407927}
+
+We also provide our own implementation of [DeepSEM](https://www.nature.com/articles/s43588-021-00099-8). You can execute DeepSEM and the ensemble version of it using `runDeepSEM` and `runDeepSEM_ensemble`.

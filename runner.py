@@ -38,6 +38,37 @@ DEFAULT_DEEPSEM_CONFIGS = {
     'K2': 1
 }
 
+DEFAULT_GRNVAE_CONFIGS = {
+    # Train/Test split
+    'train_split': 1.0,
+    'train_split_seed': None, 
+    
+    # Neural Net Definition
+    'hidden_dim': 128,
+    'z_dim': 1,
+    'A_dim': 0,
+    'train_on_non_zero': True,
+    'dropout_augmentation': 0.05,
+    'cuda': True,
+    
+    # Loss
+    'alpha': 100,
+    'beta': 1,
+    'h_scale': 0,
+    'delayed_steps_on_sparse': 30,
+    
+    # Neural Net Training
+    'batch_size': 64,
+    'n_epochs': 120,
+    'schedule': [500],
+    'eval_on_n_steps': 10,
+    'early_stopping': 0,
+    'lr_nn': 1e-4,
+    'lr_adj': 2e-5,
+    'K1': 1,
+    'K2': 1
+}
+
 def runGRNVAE(exp_array, configs, 
               ground_truth=None, logger=None):
     '''
@@ -237,16 +268,17 @@ def runGRNVAE(exp_array, configs,
     return vae.cpu(), adjs
 
 def runGRNVAE_ensemble(exp_array, configs,
-                       ground_truth=None, logger=None,  alphas=[0, 100, 200]):
-    print(f'Running ensemble with following alphas: {alphas}')
+                       ground_truth=None, logger=None, 
+                       dropout_augmentation=[0.0, 0.01, 0.05, 0.10]):
+    print(f'Running ensemble with following DA: {dropout_augmentation}')
     trained_models = []
     final_adjs = []
-    for a in alphas:
-        configs['alpha'] = a
+    for da in dropout_augmentation:
+        configs['dropout_augmentation'] = da
         vae, adjs = runGRNVAE(exp_array, configs, ground_truth, logger)
         trained_models.append(vae)
         final_adjs.append(vae.get_adj())
-    ensembled_adj = sum(final_adjs)
+    ensembled_adj = np.prod(np.stack(final_adjs), axis=0)
     return trained_models, ensembled_adj
 
 def runDeepSEM(exp_array, configs=DEFAULT_DEEPSEM_CONFIGS, 
