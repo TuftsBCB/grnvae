@@ -77,9 +77,9 @@ get_metrics(A, ground_truth)
 
 
 
-    {'AUPR': 0.0559541042642767,
-     'AUPRR': 2.3263342742602315,
-     'EP': 489,
-     'EPR': 4.77579174407927}
+    {'AUPR': 0.05958849485016752,
+     'AUPRR': 2.4774368161948437,
+     'EP': 504,
+     'EPR': 4.922288423345506}
 
 We also provide our own implementation of [DeepSEM](https://www.nature.com/articles/s43588-021-00099-8). You can execute DeepSEM and the ensemble version of it using `runDeepSEM` and `runDeepSEM_ensemble`.

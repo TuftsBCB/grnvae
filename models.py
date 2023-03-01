@@ -53,7 +53,7 @@ class GRNVAE(nn.Module):
         
         self.inference_zposterior = MLP(1, hidden_dim, 2*z_dim, activation)
         self.generative_pxz = MLP(z_dim, hidden_dim, 1, activation)
-        self.dropout_on_visible = nn.Dropout(p = dropout_augmentation)
+        self.dropout_on_input = dropout_augmentation
         # self.dropout_on_adj = nn.Dropout(p = dropout_augmentation)
         
         self.apply(self._init_weights)
@@ -90,14 +90,14 @@ class GRNVAE(nn.Module):
         std = z_posterior[:, :, self.z_dim:]
         return mu + std * torch.randn_like(std)
         
-    def forward(self, x, global_mean, global_std, use_dropout_augmentation=True): 
+    def forward(self, x, global_mean, global_std, use_dropout_augmentation=True):                 
         if self.train_on_non_zero:
             non_zero_mask = (x != 0)
         else:
             non_zero_mask = torch.ones_like(x)
                 
         if use_dropout_augmentation:
-            x = self.dropout_on_visible(x)
+            x = x * (torch.rand_like(x) > self.dropout_on_input)
             
         x = (x - global_mean) / global_std
 
@@ -118,8 +118,10 @@ class GRNVAE(nn.Module):
         
         # Losses ---------------------------------------------------------------
         if self.train_on_non_zero:
-            loss_rec = torch.sum((x - x_rec).pow(2) * non_zero_mask)
-            loss_rec /= torch.sum(non_zero_mask)
+            loss_rec_all = (x - x_rec).pow(2)
+            loss_rec = torch.sum(loss_rec_all * non_zero_mask)
+            # loss_rec = loss_rec + torch.sum(loss_rec_all * zero_mask) * 0.1
+            loss_rec = loss_rec / torch.sum(non_zero_mask)
         else:
             loss_rec = torch.mean((x - x_rec).pow(2))
         

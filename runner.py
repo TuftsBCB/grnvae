@@ -48,7 +48,7 @@ DEFAULT_GRNVAE_CONFIGS = {
     'z_dim': 1,
     'A_dim': 0,
     'train_on_non_zero': True,
-    'dropout_augmentation': 0.05,
+    'dropout_augmentation': 0.5,
     'cuda': True,
     
     # Loss
@@ -58,9 +58,9 @@ DEFAULT_GRNVAE_CONFIGS = {
     'delayed_steps_on_sparse': 30,
     
     # Neural Net Training
-    'batch_size': 64,
+    'batch_size': 128,
     'n_epochs': 120,
-    'schedule': [500],
+    'schedule': [120, 240],
     'eval_on_n_steps': 10,
     'early_stopping': 0,
     'lr_nn': 1e-4,
@@ -177,12 +177,13 @@ def runGRNVAE(exp_array, configs,
     all_but_adj = [p for i, p in enumerate(vae.parameters()) if i != 0]
     # opt_nn = torch.optim.RMSprop(all_but_adj, lr=configs['lr_nn'])
     # opt_adj = torch.optim.RMSprop([vae.adj_A], lr=configs['lr_adj'])
-    opt_nn = torch.optim.Adam(all_but_adj, lr=configs['lr_nn'], betas=[0.9, 0.9])
+    opt_nn = torch.optim.Adam(vae.parameters(), lr=configs['lr_nn'], betas=[0.9, 0.9])
+    # opt_nn = torch.optim.Adam(all_but_adj, lr=configs['lr_nn'], betas=[0.9, 0.9])
     opt_adj = torch.optim.Adam([vae.adj_A], lr=configs['lr_adj'], betas=[0.9, 0.9])
     scheduler_nn = torch.optim.lr_scheduler.MultiStepLR(
         opt_nn, milestones=configs['schedule'], gamma=0.5)
-    scheduler_adj = torch.optim.lr_scheduler.MultiStepLR(
-        opt_adj, milestones=configs['schedule'], gamma=0.5)
+    # scheduler_adj = torch.optim.lr_scheduler.MultiStepLR(
+    #     opt_adj, milestones=configs['schedule'], gamma=0.5)
         
     # Training loops -----------------------------------------------------------
     es_tracks = []
@@ -220,10 +221,10 @@ def runGRNVAE(exp_array, configs,
             loss.backward()
             if iteration_for_A:
                 opt_adj.step()
-                scheduler_adj.step()
+                # scheduler_adj.step()
             else:
                 opt_nn.step()
-                scheduler_nn.step()
+            scheduler_nn.step()
             eval_log['train_loss_rec'] += out['loss_rec'].detach().cpu().item()
             eval_log['train_loss_kl'] += out['loss_kl'].detach().cpu().item()
             eval_log['train_loss_sparse'] += loss_sparse.detach().cpu().item()
@@ -269,7 +270,7 @@ def runGRNVAE(exp_array, configs,
 
 def runGRNVAE_ensemble(exp_array, configs,
                        ground_truth=None, logger=None, 
-                       dropout_augmentation=[0.0, 0.01, 0.05, 0.10]):
+                       dropout_augmentation=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]):
     print(f'Running ensemble with following DA: {dropout_augmentation}')
     trained_models = []
     final_adjs = []
